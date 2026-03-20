@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NeuroUX — PCORI Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --navy:#0f1f45;--navy-mid:#1a2f5e;--navy-light:#243d78;
+  --blue:#3B6FE8;--blue-hover:#2d5dd4;--blue-soft:#eef3fd;
+  --yellow:#FFAB00;--yellow-soft:#fff8e6;--yellow-dim:#fff3cc;
+  --green:#00b67a;--green-soft:#e6f9f2;
+  --red:#e84040;--red-soft:#fdeaea;
+  --purple:#7c5ce8;--purple-soft:#f0edff;
+  --gray-50:#f8f9fc;--gray-100:#eef0f6;--gray-200:#dde1ee;
+  --gray-400:#9aa2bf;--gray-600:#5a6282;--gray-800:#2d3454;
+  --shadow-sm:0 1px 3px rgba(15,31,69,.08);--shadow-md:0 4px 16px rgba(15,31,69,.12);
+  --radius:10px;--radius-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray-800);min-height:100vh;}
+nav{background:#0d1a64;display:flex;align-items:center;padding:0 28px;height:56px;gap:6px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25);}
+.nav-logo{display:flex;align-items:center;gap:10px;color:white;font-weight:600;font-size:15px;margin-right:16px;flex-shrink:0;}
+.nav-logo svg{width:30px;height:30px;}
+.nav-btn{padding:7px 15px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;color:rgba(255,255,255,.7);background:transparent;display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.nav-btn:hover{background:rgba(255,255,255,.1);color:white;}
+.nav-btn.active{background:var(--blue);color:white;}
+.nav-spacer{flex:1;}
+.nav-user{width:32px;height:32px;border-radius:50%;background:var(--navy-light);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:600;cursor:pointer;}
+.page{display:none;padding:28px 32px;max-width:1300px;margin:0 auto;}
+.page.active{display:block;}
+.page-header{margin-bottom:22px;}
+.page-header h1{font-size:21px;font-weight:600;color:var(--navy);}
+.page-header p{font-size:13px;color:var(--gray-400);margin-top:3px;}
+.card{background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--gray-100);padding:26px;}
+.card-title{font-size:16px;font-weight:600;color:var(--navy);margin-bottom:22px;display:flex;align-items:center;gap:9px;}
+.form-stack{display:flex;flex-direction:column;gap:16px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-label{font-size:12px;font-weight:500;color:var(--gray-600);letter-spacing:.025em;}
+.form-input,.form-select{padding:9px 13px;border-radius:var(--radius);border:1.5px solid var(--gray-200);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--gray-800);background:white;transition:border-color .15s,box-shadow .15s;outline:none;width:100%;}
+.form-input:focus,.form-select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,111,232,.12);}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239aa2bf' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;cursor:pointer;}
+.hint-text{font-size:11.5px;color:var(--gray-400);margin-top:2px;}
+.btn{padding:10px 22px;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:7px;}
+.btn-primary{background:var(--blue);color:white;}
+.btn-primary:hover{background:var(--blue-hover);box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.btn-secondary{background:var(--gray-100);color:var(--gray-800);}
+.btn-secondary:hover{background:var(--gray-200);}
+.btn-sm{padding:6px 13px;font-size:12px;}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-card{border-radius:var(--radius-lg);padding:18px 20px;border:1px solid var(--gray-100);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:5px;}
+.stat-card .s-icon{font-size:20px;margin-bottom:2px;}
+.stat-card .s-val{font-size:26px;font-weight:700;color:var(--navy);font-family:'DM Mono',monospace;}
+.stat-card .s-lbl{font-size:11px;font-weight:500;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;}
+.stat-card.blue{background:#eef3fd;}.stat-card.yellow{background:#fff8e6;}.stat-card.green{background:var(--green-soft);}.stat-card.teal{background:#e6f4fb;}
+/* Phase tab scrollable */
+.phase-tabs-wrap{margin-bottom:18px;}
+.phase-tabs{display:flex;gap:4px;background:var(--gray-100);padding:4px;border-radius:var(--radius);width:100%;}
+.phase-tab{padding:7px 18px;border-radius:7px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--gray-600);transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap;flex:1;text-align:center;}
+.phase-tab.active{background:white;color:var(--navy);box-shadow:var(--shadow-sm);font-weight:600;}
+.sub-tab{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--gray-200);background:white;color:var(--gray-600);transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.sub-tab.active{background:var(--navy);color:white;border-color:var(--navy);}
+.sub-tab:hover:not(.active){border-color:var(--blue);color:var(--blue);}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead{background:var(--gray-50);}
+thead th{padding:8px 8px;font-weight:600;color:var(--gray-600);text-align:center;font-size:10.5px;letter-spacing:.04em;border-bottom:1px solid var(--gray-100);white-space:nowrap;}
+thead th.tleft{text-align:left;padding-left:14px;}
+tbody tr{border-bottom:1px solid var(--gray-100);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--gray-50);}
+tbody td{padding:8px 8px;text-align:center;vertical-align:middle;}
+tbody td.tleft{text-align:left;padding-left:14px;}
+.cell-ok{color:var(--green);}
+.cell-late{color:#b47d00;}
+.cell-miss{color:var(--gray-200);}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;font-family:'DM Mono',monospace;}
+.badge-green{background:var(--green-soft);color:var(--green);}
+.badge-yellow{background:var(--yellow-dim);color:#b47d00;}
+.badge-red{background:var(--red-soft);color:var(--red);}
+.badge-navy{background:var(--gray-100);color:var(--navy);}
+.uid{font-family:'DM Mono',monospace;font-size:11.5px;font-weight:500;}
+.tbl-header-row{padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.tbl-title{font-weight:600;color:var(--navy);font-size:13.5px;}
+.alert{padding:10px 14px;border-radius:var(--radius);font-size:12.5px;margin-bottom:16px;}
+.alert-info{background:rgba(59,111,232,.07);color:var(--blue);border:1px solid rgba(59,111,232,.18);}
+.success-banner{background:var(--green-soft);border:1px solid #b3ead8;color:#007a51;padding:11px 15px;border-radius:var(--radius);font-size:13px;font-weight:500;display:none;margin-bottom:16px;align-items:center;gap:8px;}
+.success-banner.show{display:flex;}
+.update-wrap{max-width:500px;margin:0 auto;}
+.divider{height:1px;background:var(--gray-100);margin:20px 0;}
+.section-label{font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+
+.phase-transition-box{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--gray-200);margin:14px 0;flex-wrap:wrap;}
+.phase-pill{padding:6px 15px;border-radius:20px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;}
+.phase-pill.baseline{background:var(--blue-soft);color:var(--blue);}
+.phase-pill.acute{background:var(--yellow-soft);color:#b47d00;}
+.phase-pill.maintenance{background:var(--green-soft);color:var(--green);}
+.phase-pill.cbt{background:var(--purple-soft);color:var(--purple);}
+.arrow-icon{color:var(--gray-400);font-size:18px;flex-shrink:0;}
+.final-phase-msg{padding:14px;background:var(--green-soft);border:1px solid #b3ead8;border-radius:var(--radius);color:#007a51;font-size:13px;font-weight:500;text-align:center;margin:14px 0;}
+.add-wrap{max-width:480px;margin:0 auto;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <img src="data:image/png;base64,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" alt="NeuroUX" style="height:36px;width:auto;object-fit:contain;"/>
+  </div>
+  <button class="nav-btn" onclick="showPage('add')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    Add Participant
+  </button>
+  <button class="nav-btn active" onclick="showPage('report')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+    Report
+  </button>
+  <button class="nav-btn" onclick="showPage('update')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+    Update Participant
+  </button>
+  <div class="nav-spacer"></div>
+  <div class="nav-user">VH</div>
+</nav>
+
+<!-- ADD PARTICIPANT -->
+<div class="page" id="page-add">
+  <div class="page-header"><h1>Add Participant</h1><p>Register a new participant into the PCORI study protocol</p></div>
+  <div class="add-wrap">
+    <div class="success-banner" id="add-success">✅ Participant added successfully!</div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Participant Details
+      </div>
+      <div class="form-stack">
+        <div class="form-group">
+          <label class="form-label">User ID</label>
+          <input class="form-input" id="add-userid" placeholder="e.g. PCORI021"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phase</label>
+          <select class="form-select" id="add-phase" onchange="updatePhaseHint()">
+            <option value="">Select Phase</option>
+            <option>Baseline</option>
+            <option>Acute Phase 1</option>
+          </select>
+          <span class="hint-text" id="phase-hint"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Timezone</label>
+          <select class="form-select">
+<option value="">Select Timezone</option>
+            <option>PST/PDT</option>
+            <option>MST/MDT</option>
+            <option>CST/CDT</option>
+            <option>EST/EDT</option>
+            <option>IST</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start Date</label>
+          <input class="form-input" type="date" id="add-startdate"/>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <button class="btn btn-secondary" style="flex:1">Cancel</button>
+          <button class="btn btn-primary" style="flex:1" onclick="submitAdd()">Add Participant</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div class="page active" id="page-report">
+  <div class="page-header"><h1>Study Report</h1><p>PCORI Protocol — Session compliance overview</p></div>
+  <div class="summary-grid">
+    <div class="stat-card blue"><div class="s-icon">👥</div><div class="s-val">20</div><div class="s-lbl">Total Participants</div></div>
+    <div class="stat-card yellow"><div class="s-icon">⚡</div><div class="s-val">8</div><div class="s-lbl">Active</div></div>
+    <div class="stat-card green"><div class="s-icon">✅</div><div class="s-val">12</div><div class="s-lbl">Completed</div></div>
+    <div class="stat-card teal"><div class="s-icon">📊</div><div class="s-val">85%</div><div class="s-lbl">Avg. Adherence</div></div>
+  </div>
+  <!-- Top-level 3 tabs -->
+  <div class="phase-tabs-wrap">
+    <div class="phase-tabs" id="main-phase-tabs">
+      <button class="phase-tab active" onclick="showMainPhase('baseline',this)">Baseline</button>
+      <button class="phase-tab" onclick="showMainPhase('acute',this)">Acute</button>
+      <button class="phase-tab" onclick="showMainPhase('maintenance',this)">Maintenance</button>
+    </div>
+  </div>
+
+  <!-- BASELINE panel -->
+  <div id="main-panel-baseline">
+    <div id="report-baseline"></div>
+  </div>
+
+  <!-- ACUTE panel: sub-tabs + content -->
+  <div id="main-panel-acute" style="display:none;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="acute-subtab-row">
+      <button class="sub-tab active" onclick="showAcuteSub('acute1',this)">Phase 1</button>
+      <button class="sub-tab" onclick="showAcuteSub('acute2',this)">Phase 2</button>
+      <button class="sub-tab" onclick="showAcuteSub('acute3',this)">Phase 3</button>
+      <button class="sub-tab" onclick="showAcuteSub('acute4',this)">Phase 4</button>
+      <button class="sub-tab" onclick="showAcuteSub('acute5',this)">Phase 5</button>
+      <button class="sub-tab" onclick="showAcuteSub('acute6',this)">Phase 6</button>
+      <button class="sub-tab" onclick="showAcuteSub('cbt',this)">CBT-I</button>
+    </div>
+    <div id="report-acute1"></div>
+    <div id="report-acute2" style="display:none;"></div>
+    <div id="report-acute3" style="display:none;"></div>
+    <div id="report-acute4" style="display:none;"></div>
+    <div id="report-acute5" style="display:none;"></div>
+    <div id="report-acute6" style="display:none;"></div>
+    <div id="report-cbt" style="display:none;"></div>
+  </div>
+
+  <!-- MAINTENANCE panel -->
+  <div id="main-panel-maintenance" style="display:none;">
+    <div id="report-maintenance"></div>
+  </div>
+</div>
+
+<!-- UPDATE PARTICIPANT -->
+<div class="page" id="page-update">
+  <div class="page-header"><h1>Update Participant</h1><p>Modify session timezone, start date, or transition a participant to the next phase</p></div>
+  <div class="update-wrap">
+    <div class="success-banner" id="update-success">✅ Update applied!</div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Select Update Type
+      </div>
+      <div class="form-group" style="margin-bottom:4px;">
+        <label class="form-label">Update Type</label>
+        <select class="form-select" id="update-type-select" onchange="selectUpdateType(this.value)">
+          <option value="">Select Update Type</option>
+          <option value="timezone">Session Timezone</option>
+          <option value="startdate">Start Date</option>
+          <option value="phase">Phase Transition</option>
+        </select>
+      </div>
+
+      <div id="update-fields" style="display:none;">
+        <div class="divider"></div>
+
+        <!-- TIMEZONE -->
+        <div id="fields-timezone" style="display:none;">
+          <div class="section-label">Session Timezone</div>
+          <div class="form-stack">
+            <div class="form-group">
+              <label class="form-label">User ID</label>
+              <select class="form-select" id="tz-userid"><option value="">Select Participant</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Session Timezone</label>
+              <select class="form-select" id="tz-new">
+<option value="">Select Timezone</option>
+                <option>PST/PDT</option><option>MST/MDT</option>
+                <option>CST/CDT</option><option>EST/EDT</option>
+                <option>IST</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+              <button class="btn btn-secondary" style="flex:1" onclick="resetUpdate()">Cancel</button>
+              <button class="btn btn-primary" style="flex:1" onclick="submitUpdate('timezone')">Update Timezone</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- START DATE -->
+        <div id="fields-startdate" style="display:none;">
+          <div class="section-label">Start Date Update</div>
+          <div class="form-stack">
+            <div class="form-group">
+              <label class="form-label">User ID</label>
+              <select class="form-select" id="sd-userid" onchange="autoFillTz()"><option value="">Select Participant</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Session Timezone</label>
+              <select class="form-select" id="sd-tz">
+<option value="">Select Timezone</option>
+                <option>PST/PDT</option><option>MST/MDT</option>
+                <option>CST/CDT</option><option>EST/EDT</option>
+                <option>IST</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Start Date</label>
+              <input class="form-input" type="date" id="sd-date"/>
+              <span class="hint-text">Becomes Day 1 of the current phase.</span>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+              <button class="btn btn-secondary" style="flex:1" onclick="resetUpdate()">Cancel</button>
+              <button class="btn btn-primary" style="flex:1" onclick="submitUpdate('startdate')">Update Start Date</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PHASE TRANSITION -->
+        <div id="fields-phase" style="display:none;">
+          <div class="section-label">Phase Transition</div>
+          <div class="form-stack">
+            <div class="form-group">
+              <label class="form-label">User ID</label>
+              <select class="form-select" id="pt-userid" onchange="loadPhaseTransition()"><option value="">Select Participant</option></select>
+            </div>
+            <div id="pt-preview" style="display:none;">
+              <div class="phase-transition-box">
+                <div>
+                  <div style="font-size:10.5px;color:var(--gray-400);margin-bottom:5px;">Current Phase</div>
+                  <div class="phase-pill baseline" id="pt-current-pill">—</div>
+                </div>
+                <div class="arrow-icon">→</div>
+                <div id="pt-next-wrap">
+                  <div style="font-size:10.5px;color:var(--gray-400);margin-bottom:5px;">Transition To</div>
+                  <select class="form-select" id="pt-next-select" onchange="updateNextPill()" style="min-width:160px;"></select>
+                </div>
+              </div>
+              <div id="pt-next-pill-row" style="margin-bottom:14px;display:none;">
+                <div style="font-size:10.5px;color:var(--gray-400);margin-bottom:5px;">Selected</div>
+                <span class="phase-pill" id="pt-next-pill">—</span>
+              </div>
+              <div class="final-phase-msg" id="pt-final-msg" style="display:none;">
+                🎓 This participant is in their <strong>final phase (Maintenance)</strong>. No further transitions available.
+              </div>
+              <div class="form-group" id="pt-date-group">
+                <label class="form-label">New Phase Start Date</label>
+                <input class="form-input" type="date" id="pt-date"/>
+                <span class="hint-text">Becomes Day 1 of the new phase.</span>
+              </div>
+            </div>
+            <div id="pt-btns" style="display:none;gap:10px;">
+              <button class="btn btn-secondary" style="flex:1" onclick="resetUpdate()">Cancel</button>
+              <button class="btn btn-primary" style="flex:1" id="pt-submit-btn" onclick="submitUpdate('phase')">Confirm Transition</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==============================
+// DATA
+// ==============================
+const TZ_LIST=['PST/PDT','MST/MDT','CST/CDT','EST/EDT','IST'];
+const PHASE_ASSIGN=[
+  'Baseline','Baseline','Baseline',
+  'Acute Phase 1','Acute Phase 1','Acute Phase 2',
+  'Acute Phase 2','Acute Phase 3','Acute Phase 3',
+  'Acute Phase 4','Acute Phase 5','Acute Phase 6',
+  'CBT-I','CBT-I','Maintenance',
+  'Maintenance','Baseline','Acute Phase 1',
+  'Acute Phase 3','Maintenance'
+];
+
+function addDays(isoStr,n){const d=new Date(isoStr);d.setDate(d.getDate()+n);return d;}
+function fmt(d){return (d.getMonth()+1+'').padStart(2,'0')+'/'+(d.getDate()+'').padStart(2,'0')+'/'+d.getFullYear();}
+function toIso(d){return d.toISOString().split('T')[0];}
+
+const participants=[];
+for(let i=1;i<=20;i++){
+  const uid='PCORI'+String(i).padStart(3,'0');
+  const phase=PHASE_ASSIGN[i-1];
+  const sd=addDays('2025-01-06',(i-1)*3);
+  participants.push({uid,phase,startDate:fmt(sd),startIso:toIso(sd),tz:TZ_LIST[(i-1)%TZ_LIST.length],comp:Math.floor(65+((i*37+13)%36))});
+}
+
+// ==============================
+// NAV
+// ==============================
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-btn')[['add','report','update'].indexOf(p)].classList.add('active');
+}
+
+// ==============================
+// ADD PARTICIPANT
+// ==============================
+function updatePhaseHint(){
+  const hints={'Baseline':'14 consecutive days · 2 sessions per day','Acute Phase 1':'30 consecutive days · 2 sessions per day'};
+  document.getElementById('phase-hint').textContent=hints[document.getElementById('add-phase').value]||'';
+}
+function submitAdd(){
+  const uid=document.getElementById('add-userid').value.trim();
+  const ph=document.getElementById('add-phase').value;
+  if(!uid||!ph){alert('Please fill all required fields.');return;}
+  const s=document.getElementById('add-success');
+  s.textContent=`✅ Participant "${uid}" added to ${ph} phase!`;
+  s.classList.add('show');
+  setTimeout(()=>s.classList.remove('show'),3200);
+  document.getElementById('add-userid').value='';
+  document.getElementById('add-phase').value='';
+  document.getElementById('add-startdate').value='';
+  document.getElementById('phase-hint').textContent='';
+}
+
+// ==============================
+// REPORT TABLES
+// ==============================
+function compBadge(c){
+  const cls=c>=90?'badge-green':c>=70?'badge-yellow':'badge-red';
+  return `<span class="badge ${cls}">${c}%</span>`;
+}
+
+// Deterministic pseudo-random using uid + day + session
+function cellRand(uid,d,s){
+  let h=0;
+  for(let i=0;i<uid.length;i++) h=(Math.imul(31,h)+uid.charCodeAt(i))|0;
+  return (Math.abs((h*1664525+d*2053+s*1013904223)&0x7fffffff))/0x7fffffff;
+}
+
+function buildSessionTable(containerId,title,note,phaseName,DAYS,SESSIONS){
+  const panel=document.getElementById(containerId);
+  const list=participants.filter(p=>p.phase===phaseName);
+  let html=`
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="tbl-header-row">
+      <div class="tbl-title">${title} <span style="font-weight:400;color:var(--gray-400);font-size:12px;">— ${note}</span></div>
+      <button class="btn btn-secondary btn-sm">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+    </div>
+    <div class="tbl-wrap"><table><thead>
+    <tr>
+      <th class="tleft" rowspan="2" style="min-width:95px;">User ID</th>
+      <th rowspan="2" style="min-width:80px;">Compliance</th>
+      <th rowspan="2" style="min-width:88px;">Start Date</th>`;
+  for(let d=1;d<=DAYS;d++){
+    html+=`<th colspan="${SESSIONS}" style="border-left:1px solid var(--gray-200);font-size:9.5px;min-width:${SESSIONS===2?36:20}px;">D${d}</th>`;
+  }
+  html+=`</tr><tr>`;
+  for(let d=1;d<=DAYS;d++){
+    for(let s=1;s<=SESSIONS;s++){
+      html+=`<th style="font-size:9.5px;color:var(--gray-400);${s===1?'border-left:1px solid var(--gray-200)':''}">S${s}</th>`;
+    }
+  }
+  html+=`</tr></thead><tbody>`;
+  if(!list.length){
+    html+=`<tr><td colspan="${3+DAYS*SESSIONS}" style="text-align:center;padding:28px;color:var(--gray-400);font-style:italic;">No participants in this phase</td></tr>`;
+  } else {
+    list.forEach(p=>{
+      html+=`<tr>
+        <td class="tleft"><span class="uid">${p.uid}</span></td>
+        <td>${compBadge(p.comp)}</td>
+        <td style="font-size:11.5px;color:var(--gray-600);">${p.startDate}</td>`;
+      for(let d=1;d<=DAYS;d++){
+        for(let s=1;s<=SESSIONS;s++){
+          const r=cellRand(p.uid,d,s);
+          let sty=s===1?'border-left:1px solid var(--gray-200)':'';
+          let cell='';
+          if(r>0.09){sty+=';background:var(--green-soft)';cell='<span class="cell-ok">✓</span>';}
+          else if(r>0.04){sty+=';background:var(--yellow-dim)';cell='<span class="cell-late">✓</span>';}
+          else{cell='<span class="cell-miss">—</span>';}
+          html+=`<td style="${sty}">${cell}</td>`;
+        }
+      }
+      html+=`</tr>`;
+    });
+  }
+  html+=`</tbody></table></div></div>`;
+  panel.innerHTML=html;
+}
+
+function buildMaintenanceTable(){
+  const panel=document.getElementById('report-maintenance');
+  const list=participants.filter(p=>p.phase==='Maintenance');
+  // Only the 35 session columns: Days 24-30 of each of 5 months
+  const MONTHS=5;
+  const SESSION_DAYS_IN_MONTH=[24,25,26,27,28,29,30];
+  const TOTAL_SESSIONS=MONTHS*SESSION_DAYS_IN_MONTH.length; // 35
+
+  function sessionDate(startIso,idx){
+    // idx is 0-based. Day 1 (idx=0) = startDate, Day 2 (idx=1) = startDate+1, ...
+    // Each month's 7 sessions are consecutive days, with a gap of 23 days between months.
+    // Month 0: idx 0-6 → startDate + 0..6
+    // Month 1: idx 7-13 → startDate + 30..36  (30 days after month 0 start)
+    // Month N: idx N*7..(N*7+6) → startDate + (N*30)..(N*30+6)
+    const month=Math.floor(idx/7);
+    const dayInMonth=idx%7;
+    const dayOffset=(month*30)+dayInMonth;
+    const d=new Date(startIso); d.setDate(d.getDate()+dayOffset); return d;
+  }
+  function fmtShort(d){return (d.getMonth()+1+'').padStart(2,'0')+'/'+(d.getDate()+'').padStart(2,'0');}
+
+  let html=`
+  <div class="alert alert-info">Showing all <strong>35 session days</strong> — Days 24–30 of each of 5 months. Each cell shows the actual session date.</div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="tbl-header-row">
+      <div class="tbl-title">Maintenance <span style="font-weight:400;color:var(--gray-400);font-size:12px;">— 5 months · 7 sessions/month · 35 total sessions</span></div>
+      <button class="btn btn-secondary btn-sm">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+    </div>
+    <div class="tbl-wrap"><table><thead>
+    <tr>
+      <th class="tleft" rowspan="2" style="min-width:95px;">User ID</th>
+      <th rowspan="2" style="min-width:80px;">Compliance</th>
+      <th rowspan="2" style="min-width:88px;">Start Date</th>`;
+  for(let m=1;m<=MONTHS;m++){
+    html+=`<th colspan="7" style="border-left:2px solid var(--navy-light);background:var(--navy);color:white;font-size:11px;letter-spacing:.04em;">Month ${m}</th>`;
+  }
+  html+=`</tr><tr>`;
+  for(let s=1;s<=TOTAL_SESSIONS;s++){
+    const isFirst=((s-1)%7===0);
+    html+=`<th style="font-size:10px;color:var(--green);background:#e6f9f2;min-width:48px;${isFirst?'border-left:2px solid var(--navy-light)':'border-left:1px solid var(--gray-200)'}">Day ${s}</th>`;
+  }
+  html+=`</tr></thead><tbody>`;
+  if(!list.length){
+    html+=`<tr><td colspan="${3+TOTAL_SESSIONS}" style="text-align:center;padding:28px;color:var(--gray-400);font-style:italic;">No participants in Maintenance phase</td></tr>`;
+  } else {
+    list.forEach(p=>{
+      html+=`<tr>
+        <td class="tleft"><span class="uid">${p.uid}</span></td>
+        <td>${compBadge(p.comp)}</td>
+        <td style="font-size:11.5px;color:var(--gray-600);">${p.startDate}</td>`;
+      for(let s=0;s<TOTAL_SESSIONS;s++){
+        const isFirst=(s%7===0);
+        const sd=sessionDate(p.startIso,s);
+        const dateStr=fmtShort(sd);
+        const r=cellRand(p.uid,s+1,1);
+        let sty=isFirst?'border-left:2px solid var(--navy-light)':'border-left:1px solid var(--gray-100)';
+        let cell='';
+        if(r>0.1){
+          sty+=';background:var(--green-soft)';
+          cell=`<div style="font-size:13px;line-height:1;color:var(--green);">✓</div><div style="font-size:9.5px;color:var(--green);margin-top:2px;">${dateStr}</div>`;
+        } else {
+          cell=`<div style="font-size:13px;line-height:1;color:var(--gray-300);">—</div><div style="font-size:9.5px;color:var(--gray-400);margin-top:2px;">${dateStr}</div>`;
+        }
+        html+=`<td style="${sty};padding:5px 6px;">${cell}</td>`;
+      }
+      html+=`</tr>`;
+    });
+  }
+  html+=`</tbody></table></div></div>`;
+  panel.innerHTML=html;
+}
+// Build all tables
+buildSessionTable('report-baseline','Baseline','14 Days × 2 Sessions/Day','Baseline',14,2);
+buildSessionTable('report-acute1','Acute Phase 1','30 Days × 2 Sessions/Day','Acute Phase 1',30,2);
+buildSessionTable('report-acute2','Acute Phase 2','30 Days × 2 Sessions/Day','Acute Phase 2',30,2);
+buildSessionTable('report-acute3','Acute Phase 3','30 Days × 2 Sessions/Day','Acute Phase 3',30,2);
+buildSessionTable('report-acute4','Acute Phase 4','30 Days × 2 Sessions/Day','Acute Phase 4',30,2);
+buildSessionTable('report-acute5','Acute Phase 5','30 Days × 2 Sessions/Day','Acute Phase 5',30,2);
+buildSessionTable('report-acute6','Acute Phase 6','30 Days × 2 Sessions/Day','Acute Phase 6',30,2);
+buildSessionTable('report-cbt','CBT-I','30 Days × 2 Sessions/Day','CBT-I',30,2);
+buildMaintenanceTable();
+
+function showMainPhase(p, btn){
+  ['baseline','acute','maintenance'].forEach(x=>{
+    document.getElementById('main-panel-'+x).style.display = x===p ? 'block':'none';
+  });
+  document.querySelectorAll('#main-phase-tabs .phase-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function showAcuteSub(sub, btn){
+  ['acute1','acute2','acute3','acute4','acute5','acute6','cbt'].forEach(x=>{
+    document.getElementById('report-'+x).style.display = x===sub ? 'block':'none';
+  });
+  document.querySelectorAll('#acute-subtab-row .sub-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ==============================
+// UPDATE PARTICIPANT
+// ==============================
+function populateUidSelects(){
+  ['tz-userid','sd-userid','pt-userid'].forEach(id=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML='<option value="">Select Participant</option>';
+    participants.forEach(p=>{
+      const opt=document.createElement('option');
+      opt.value=p.uid; opt.textContent=`${p.uid} (${p.phase})`;
+      sel.appendChild(opt);
+    });
+  });
+}
+populateUidSelects();
+
+function selectUpdateType(type){
+  if(!type){document.getElementById('update-fields').style.display='none';return;}
+  document.getElementById('update-fields').style.display='block';
+  ['fields-timezone','fields-startdate','fields-phase'].forEach(id=>document.getElementById(id).style.display='none');
+  const fmap={timezone:'fields-timezone',startdate:'fields-startdate',phase:'fields-phase'};
+  document.getElementById(fmap[type]).style.display='block';
+}
+
+function resetUpdate(){
+  document.getElementById('update-type-select').value='';
+  document.getElementById('update-fields').style.display='none';
+}
+
+function autoFillTz(){
+  const uid=document.getElementById('sd-userid').value;
+  const p=participants.find(x=>x.uid===uid);
+  if(p) document.getElementById('sd-tz').value=p.tz;
+}
+
+// Phase transition rules
+const PHASE_NEXT={
+  'Baseline':['Acute Phase 1'],
+  'Acute Phase 1':['Acute Phase 2','Maintenance'],
+  'Acute Phase 2':['Acute Phase 3','Maintenance'],
+  'Acute Phase 3':['Acute Phase 4','Maintenance'],
+  'Acute Phase 4':['Acute Phase 5','Maintenance'],
+  'Acute Phase 5':['Acute Phase 6','Maintenance'],
+  'Acute Phase 6':['CBT-I','Maintenance'],
+  'CBT-I':['Maintenance'],
+  'Maintenance':[]
+};
+
+function pillClass(ph){
+  if(ph==='Baseline') return 'baseline';
+  if(ph.startsWith('Acute')) return 'acute';
+  if(ph==='CBT-I') return 'cbt';
+  if(ph==='Maintenance') return 'maintenance';
+  return 'baseline';
+}
+
+function loadPhaseTransition(){
+  const uid=document.getElementById('pt-userid').value;
+  const preview=document.getElementById('pt-preview');
+  const btns=document.getElementById('pt-btns');
+  if(!uid){preview.style.display='none';btns.style.display='none';return;}
+
+  const p=participants.find(x=>x.uid===uid);
+  const cur=p?p.phase:'Baseline';
+  const nexts=PHASE_NEXT[cur]||[];
+
+  preview.style.display='block';
+
+  const curPill=document.getElementById('pt-current-pill');
+  curPill.textContent=cur; curPill.className='phase-pill '+pillClass(cur);
+
+  const finalMsg=document.getElementById('pt-final-msg');
+  const nextWrap=document.getElementById('pt-next-wrap');
+  const dateGroup=document.getElementById('pt-date-group');
+  const submitBtn=document.getElementById('pt-submit-btn');
+
+  if(nexts.length===0){
+    finalMsg.style.display='block';
+    nextWrap.style.display='none';
+    dateGroup.style.display='none';
+    submitBtn.style.display='none';
+    btns.style.display='none';
+  } else {
+    finalMsg.style.display='none';
+    nextWrap.style.display='block';
+    dateGroup.style.display='block';
+    submitBtn.style.display='';
+    btns.style.display='flex';
+
+    const sel=document.getElementById('pt-next-select');
+    sel.innerHTML='';
+    nexts.forEach(n=>{
+      const opt=document.createElement('option');
+      opt.value=n; opt.textContent=n; sel.appendChild(opt);
+    });
+    updateNextPill();
+  }
+}
+
+function updateNextPill(){
+  const v=document.getElementById('pt-next-select').value;
+  const pill=document.getElementById('pt-next-pill');
+  if(pill){pill.textContent=v; pill.className='phase-pill '+pillClass(v);}
+}
+
+function submitUpdate(type){
+  let msg='';
+  if(type==='timezone'){
+    const uid=document.getElementById('tz-userid').value;
+    const tz=document.getElementById('tz-new').value;
+    if(!uid||!tz){alert('Please fill all fields.');return;}
+    const p=participants.find(x=>x.uid===uid);
+    if(p) p.tz=tz;
+    msg=`✅ Timezone for ${uid} updated to ${tz}`;
+  } else if(type==='startdate'){
+    const uid=document.getElementById('sd-userid').value;
+    const dt=document.getElementById('sd-date').value;
+    if(!uid||!dt){alert('Please fill all fields.');return;}
+    const p=participants.find(x=>x.uid===uid);
+    if(p){p.startIso=dt;p.startDate=fmt(new Date(dt));}
+    msg=`✅ Start date for ${uid} updated to ${fmt(new Date(dt))}`;
+  } else if(type==='phase'){
+    const uid=document.getElementById('pt-userid').value;
+    const newPhase=document.getElementById('pt-next-select').value;
+    const dt=document.getElementById('pt-date').value;
+    if(!uid||!dt){alert('Please fill all fields.');return;}
+    const p=participants.find(x=>x.uid===uid);
+    if(p){p.phase=newPhase;p.startIso=dt;p.startDate=fmt(new Date(dt));}
+    msg=`✅ ${uid} transitioned to ${newPhase} from ${fmt(new Date(dt))}`;
+    // Rebuild all report tables
+    buildSessionTable('report-baseline','Baseline','14 Days × 2 Sessions/Day','Baseline',14,2);
+    ['1','2','3','4','5','6'].forEach(n=>buildSessionTable(`report-acute${n}`,`Acute Phase ${n}`,'30 Days × 2 Sessions/Day',`Acute Phase ${n}`,30,2));
+    buildSessionTable('report-cbt','CBT-I','30 Days × 2 Sessions/Day','CBT-I',30,2);
+    buildMaintenanceTable();
+    populateUidSelects();
+  }
+  const s=document.getElementById('update-success');
+  s.textContent=msg; s.classList.add('show');
+  setTimeout(()=>{s.classList.remove('show');resetUpdate();},3500);
+}
+</script>
+</body>
+</html>
