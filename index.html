@@ -393,6 +393,12 @@ function submitAdd(){
 
 buildPhaseDateRows();
 
+// Pre-fill with sample data
+document.getElementById('add-userid').value = 'test001';
+document.getElementById('add-tz').value = 'IST';
+document.getElementById('d-baseline-start').value = '2026-04-01';
+onStartChange(0); // trigger cascade from baseline
+
 // ==============================
 // UPDATE PARTICIPANT
 // ==============================
