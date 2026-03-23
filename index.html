@@ -395,6 +395,13 @@ buildPhaseDateRows();
 
 setTimeout(function(){
   selectUid('PCORI004');
+  setTimeout(function(){
+    var m1 = document.getElementById('mt-m1-start');
+    if(m1){
+      m1.value = '2026-06-24';
+      onMaintStartChange(1);
+    }
+  }, 50);
 }, 50);
 
 // ==============================
